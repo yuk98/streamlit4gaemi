@@ -1,0 +1,63 @@
+# # # Byte-compiled / optimized / DLL files # # #
+__pycache__/
+*.py[cod]
+*$py.class
+
+# # # C extensions # # #
+*.so
+
+# # # Distribution / packaging # # #
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# # # Virtual Environments # # #
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# # # Streamlit # # #
+# Streamlit 클라우드 배포 시 사용되는 secrets.toml 파일을 포함합니다.
+# 민감한 정보(API 키 등)가 포함되므로 반드시 ignore 처리해야 합니다.
+.streamlit/
+
+# # # IDE / Editor specific files # # #
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# # # OS-specific files # # #
+.DS_Store
+Thumbs.db
+
+# # # Data Files # # #
+# 만약 데이터 파일의 용량이 크거나, Git으로 관리하고 싶지 않다면 아래 줄의 주석을 제거하세요.
+# data/
+
+# # # Log files # # #
+*.log
+
+# # # Environment variables # # #
+# 환경변수를 담고 있는 .env 파일을 Git에 올리지 않기 위함입니다.
+.env*
