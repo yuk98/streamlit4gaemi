@@ -1,52 +1,112 @@
+import os
+import os.path
 import streamlit as st
 import pandas as pd
-import numpy as np
-# [수정] 새로운 get_multi_pane_chart_option 함수를 임포트합니다.
-from modules.multi_pane_charts import get_multi_pane_chart_option
-from streamlit_echarts import st_echarts
-
-# --- 1. 샘플 데이터 생성 (인덱스를 날짜로 설정) ---
-date_index = pd.to_datetime(pd.date_range(start='2023-01-01', periods=100, freq='D'))
-dates_str_list = date_index.strftime('%Y-%m-%d').tolist()
-
-df1 = pd.DataFrame({'Price': np.random.rand(100) * 50 + 100, 'MA20': (np.random.rand(100) * 50 + 100).cumsum() / np.arange(1, 101)}, index=date_index)
-df2 = pd.DataFrame({'RSI': np.random.rand(100) * 40 + 30}, index=date_index)
-df3 = pd.DataFrame({'MACD': np.random.randn(100), 'Signal': np.random.randn(100)}, index=date_index)
-df4 = pd.DataFrame({'Volume': np.random.randint(1000, 5000, size=100)}, index=date_index)
-
-# --- 2. 각 패널에 대한 설정 정의 (DataFrame 직접 포함) ---
-pane1_config = {'title': '주가 정보', 'data': df1}
-pane2_config = {'title': 'RSI 지표', 'data': df2}
-pane3_config = {'title': 'MACD', 'data': df3}
-pane4_config = {'title': '거래량', 'data': df4}
-
-# --- 3. 함수 호출 (훨씬 간결해진 방식) ---
-# [수정] 별도의 헬퍼 함수나 데이터 필터링 과정이 필요 없습니다.
-
-# 예시 1: 2개 패널 차트
-st.header("2-Pane Chart")
-options_2_panes = get_multi_pane_chart_option(
-    pane1_config, 
-    pane4_config # 그리고 싶은 패널 설정만 전달
-)
-st_echarts(options=options_2_panes, height="600px")
+from modules.chart_components import InteractiveStockChart # 우리가 만든 차트 컴포넌트 클래스
 
 
-# 예시 2: 3개 패널 차트
-st.header("3-Pane Chart")
-options_3_panes = get_multi_pane_chart_option(
-    pane1_config, 
-    pane2_config, 
-    pane4_config
-)
-st_echarts(options=options_3_panes, height="700px")
+# 페이지 레이아웃을 넓게 설정하여 차트가 잘 보이도록 합니다.
+st.set_page_config(layout="wide")
+
+st.title("인터랙티브 차트 컴포넌트")
+st.write("`InteractiveStockChart` 클래스로 생성된 차트 컴포넌트입니다.")
+
+@st.cache_data
+def load_data(filepath):
+    """CSV 파일을 로드하고 'date' 컬럼을 인덱스로 설정합니다."""
+    df = pd.read_csv(filepath, parse_dates=['Date']).set_index('Date')
+    return df
+
+@st.cache_data
+def load_trade_data_dict(data_dir='data/trade_data', fname='kr_trade_data_total.csv', country_name_lst : list = ['총계']):
+    data_dir = os.path.join(os.path.dirname(__file__),"..", data_dir)
+    data_dir = os.path.abspath(data_dir)
+    # print(data_dir)
+
+    prefixes = [
+        'ttm',
+        'yoy',
+        'ttm_yoy',
+        'monthly_trade_data'
+    ]
+    data_dict = {}
+    for country_name in country_name_lst:
+        for prefix in prefixes:
+            if prefix == 'monthly_trade_data':
+                fpath = os.path.join(data_dir, f"{fname}")
+
+            else:
+                fpath = os.path.join(data_dir, f"{prefix}_{fname}")
+            
+            country_name_prefix = country_name + '_'+ prefix
+
+            if os.path.exists(fpath):
+                df = pd.read_csv(fpath, parse_dates=['Date'])
+                df.set_index('Date', inplace=True)
+                
+                df = df[df['country_name'] == country_name].drop(columns=['country_name'])
+                
+                data_dict[country_name_prefix] = df
+
+            else:
+                data_dict[country_name_prefix] = None  # 파일이 없으면 None으로 표시
+
+    return data_dict
+
+# --- 데이터 로딩 및 준비 ---
+def scale_df(df, scale_factor=1e9):
+    if df is not None:
+        # 숫자 컬럼만 선택
+        num_cols = df.select_dtypes(include='number').columns
+        df[num_cols] = df[num_cols] / scale_factor
+        return df
+    else:
+        return None
+
+try:
+    file_path = 'data/financial_data/krx_idx/krx_idx.csv'
+    file_path = os.path.join( os.path.dirname(__file__), "..", file_path)
+    file_path = os.path.abspath(file_path)
+    krx_idx = load_data(file_path)
+    # krx_idx.set_index("Date", inplace=True)
+    Kospi200_df = krx_idx[["KOSPI200"]].dropna()
+    pane1_config = {"title": "Kospi200", "data": Kospi200_df}
 
 
-# 예시 3: 4개 패널 차트
-st.header("4-Pane Chart")
-options_4_panes = get_multi_pane_chart_option(
-    pane1_config, pane2_config, pane3_config, pane4_config,
-    zoom_start_value=dates_str_list[50], # zoom 값은 문자열 리스트에서 선택
-    zoom_end_value=dates_str_list[99]
-)
-st_echarts(options=options_4_panes, height="800px")
+    data_dir = 'data/trade_data'  # 데이터가 저장된 디렉토리
+    fname = 'kr_trade_data_total.csv'  # 데이터 파일 이름
+    country_name_lst = ['총계']
+
+    trade_data_dict = load_trade_data_dict(data_dir=data_dir, fname=fname, country_name_lst=country_name_lst)
+    ttm_kr_trade = scale_df(trade_data_dict['총계_ttm'])# 1billion usd
+    yoy_kr_trade = trade_data_dict['총계_yoy']
+    ttm_yoy_kr_trade = trade_data_dict['총계_ttm_yoy']
+    monthly_kr_trade = scale_df(trade_data_dict['총계_monthly_trade_data'])  # 1billion usd
+
+    new_col_names = {
+        'ttm_export_amount': '수출액',
+        'ttm_import_amount': '수입액',
+        'ttm_trade_balance': '무역수지'
+    }
+    # print("ttm_kr_trade columns:", ttm_kr_trade.columns)
+    ttm_kr_trade = ttm_kr_trade.rename(columns=new_col_names)
+    # print("ttm_kr_trade columns:", ttm_kr_trade.columns)
+
+    pane2_config = {"title": "12개월 누적 수출입 ($1B)", "data": ttm_kr_trade[['수출액', '수입액']]}
+    pane3_config = {"title": "12개월 누적 무역수지 ($1B)", "data": ttm_kr_trade[['무역수지']]}
+
+    # 2. [수정] 준비된 설정들을 인자로 하여 차트 컴포넌트의 인스턴스를 생성합니다.
+    interactive_chart = InteractiveStockChart(
+        pane1_config,
+        pane2_config,
+        pane3_config,
+        state_key= 'kr_trade_data_chart',  # 고유한 state_key를 지정합니다.    
+    )
+
+    interactive_chart.display()
+
+    
+
+except FileNotFoundError:
+    st.error("오류: `data/stock_data.csv` 와 `data/indicator_data.csv` 파일이 필요합니다.")
+    st.info("현재 디렉토리에 'data' 폴더를 만들고 그 안에 CSV 파일들을 넣어주세요.")

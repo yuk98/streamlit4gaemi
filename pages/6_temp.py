@@ -30,7 +30,8 @@ try:
     # 2. [수정] 준비된 설정들을 인자로 하여 차트 컴포넌트의 인스턴스를 생성합니다.
     interactive_chart = InteractiveStockChart(
         pane1_config,
-        pane2_config
+        pane2_config,
+        state_key= 'dummy_chart',  # 고유한 state_key를 지정합니다.
     )
     
     # 3. display() 메소드를 호출하여 화면에 컴포넌트를 그립니다. (이 부분은 동일)
