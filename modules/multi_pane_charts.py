@@ -43,6 +43,7 @@ def get_multi_pane_chart_option(*pane_configs, zoom_start_value=None, zoom_end_v
         pane_df = config['data']
         pane_title = config['title']
         series_names = pane_df.columns.tolist()
+        # print(series_names)
 
         # --- [수정 시작] ---
         # 2. 현재 패널의 데이터를 공통 인덱스에 맞춰 재정렬(reindex)합니다.
@@ -56,7 +57,7 @@ def get_multi_pane_chart_option(*pane_configs, zoom_start_value=None, zoom_end_v
                 for idx, val in df_reindexed[name].items()
             ]
             final_series.append({
-                "name": name, "type": 'line', "smooth": True, "data": series_data,
+                "name": name, "type": 'line', "smooth": False, "data": series_data,
                 "connectNulls": True, "showSymbol": False, "lineStyle": {"width": 2},
                 "xAxisIndex": i, "yAxisIndex": i,
             })
@@ -74,7 +75,7 @@ def get_multi_pane_chart_option(*pane_configs, zoom_start_value=None, zoom_end_v
             "splitLine": {"show": True, "lineStyle": {"color": '#cccccc'}},
             "axisLine": {"lineStyle": {"color": '#aaa'}},
             "axisLabel": {
-                "show": is_last_pane,
+                "show": True,
                 "color": '#000000',
                 "margin": 15,
                 "fontSize": 12,
@@ -94,7 +95,6 @@ def get_multi_pane_chart_option(*pane_configs, zoom_start_value=None, zoom_end_v
             })
         current_top += grid_height + PANE_SPACING_PERCENT
     
-    final_series.reverse()
     echarts_option = {
         "backgroundColor": backgroundColor,
         "color": ['#5470C6', '#91CC75', '#EE6666', '#FAC858', '#73C0DE', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
@@ -103,7 +103,7 @@ def get_multi_pane_chart_option(*pane_configs, zoom_start_value=None, zoom_end_v
         "axisPointer": {"link": [{"xAxisIndex": list(range(num_panes))}], "label": {"backgroundColor": '#777'}},
         "graphic": graphics, "grid": grids, "xAxis": x_axes, "yAxis": y_axes,
         "dataZoom": [
-            {"type": 'slider', "xAxisIndex": list(range(num_panes)), "bottom": 20, "height": 30, "startValue": zoom_start_value, "endValue": zoom_end_value},
+            {"type": 'slider', "xAxisIndex":list(range(num_panes)), "bottom": 20, "height": 30, "startValue": zoom_start_value, "endValue": zoom_end_value},
             # {"type": 'inside', "xAxisIndex": list(range(num_panes)), "startValue": zoom_start_value, "endValue": zoom_end_value}
         ],
         "series": final_series

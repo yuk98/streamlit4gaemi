@@ -69,7 +69,7 @@ try:
     file_path = os.path.abspath(file_path)
     krx_idx = load_data(file_path)
     # krx_idx.set_index("Date", inplace=True)
-    Kospi200_df = krx_idx[["KOSPI200"]].dropna()
+    Kospi200_df = krx_idx[["KOSPI200"]].dropna().round(0)
     pane1_config = {"title": "Kospi200", "data": Kospi200_df}
 
 
@@ -92,8 +92,8 @@ try:
     ttm_kr_trade = ttm_kr_trade.rename(columns=new_col_names)
     # print("ttm_kr_trade columns:", ttm_kr_trade.columns)
 
-    pane2_config = {"title": "12개월 누적 수출입 ($1B)", "data": ttm_kr_trade[['수출액', '수입액']]}
-    pane3_config = {"title": "12개월 누적 무역수지 ($1B)", "data": ttm_kr_trade[['무역수지']]}
+    pane2_config = {"title": "12개월 누적 수출입 ($1B)", "data": ttm_kr_trade[['수출액', '수입액']].round(0)}
+    pane3_config = {"title": "12개월 누적 무역수지 ($1B)", "data": ttm_kr_trade[['무역수지']].round(0)}
 
     # 2. [수정] 준비된 설정들을 인자로 하여 차트 컴포넌트의 인스턴스를 생성합니다.
     interactive_chart = InteractiveStockChart(
